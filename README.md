@@ -1,5 +1,8 @@
 # SCProject
 
+Website where we got the data from:
+http://files.pushshift.io/reddit/comments/
+
 Tasks:
 
 1. Pick cities
