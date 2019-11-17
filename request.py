@@ -4,39 +4,45 @@ import json
 import sys
 
 
-def API_CALL_STR(subreddit, start, end): 
-    return ("https://api.pushshift.io/reddit/submission/search/?" +
+def API_CALL_STR(subreddit, start, end, endpoint='comment'): 
+    return (
+        f"https://api.pushshift.io/reddit/{endpoint}/search/?" +
         f"after={start}&" +
         f"before={end}&" +
         "size=500&" +
         f"sort_type=created_utc&sort=asc&" +
         f"subreddit={subreddit}")
 
-def scrape(subreddit, start, end, output_file=None):
+def checkpoint(start, end):
+    sdt = datetime.datetime.fromtimestamp(start)
+    edt = datetime.datetime.fromtimestamp(end)
+    return f'start: {sdt} | end: {edt}'
+
+def scrape(subreddit, start, end, output_file=None, endpoint='comment'):
     if output_file is None:
-        output_file = f'{subreddit}_start={start}_end={end}.json'
+        output_file = f'{subreddit}_start={start}_end={end}_ep={endpoint}.json'
     start = utc_timestamp(start)
     end = utc_timestamp(end)
     objs = []
     while True:
-        call_str = API_CALL_STR(subreddit, start, end)
+        call_str = API_CALL_STR(subreddit, start, end, endpoint=endpoint)
         try:
             response = requests.get(call_str)
         except:
             print(f'Error in request: {call_str}'); exit()
-        if not response.status_code == 200:
+        if response.status_code not in [200, 429]:
             print(f'Error in response: {response.status_code}'); exit()
+        if response.status_code == 429:
+            print(f'Rate limit reached at {checkpoint(start, end)}')
+            break
         # try:
         data = response.json()['data']
         if len(data) < 1:
-            print('Terminated due to no data')
-            # fromtimestamp always uses local
-            sdt = datetime.datetime.fromtimestamp(start)
-            edt = datetime.datetime.fromtimestamp(end)
-            print(f'start: {sdt} | end: {edt}')
+            print(f'No remaining data at {checkpoint(start, end)}')
             break
         objs.extend(data)
         start = data[-1]['created_utc']
+    print('Writing collected objects.')
     with open(output_file, 'w') as output:
         output.write(json.dumps({'comments' : objs}, indent=4))
 
@@ -53,6 +59,13 @@ def utc_timestamp(time):
 
 
 if __name__ == '__main__':
-    _, subreddit, start, end, *_ = sys.argv
-    scrape(subreddit, start, end)
+    if len(sys.argv) >= 5:
+        _, subreddit, start, end, endpoint, *_ = sys.argv
+    elif len(sys.argv) >= 4:
+        _, subreddit, start, end, *_ = sys.argv
+        endpoint = 'comment'
+    else:
+        raise Exception('Invalid command line arguments.'
+            + ' Use: python3 scrape.py <start> <end> <endpoint?>')
+    scrape(subreddit, start, end, endpoint=endpoint)
 

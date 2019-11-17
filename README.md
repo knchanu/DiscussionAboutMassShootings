@@ -1,9 +1,15 @@
 # SCProject
 
-Website where we got the data from:
-http://files.pushshift.io/reddit/comments/
+## How to Run...
+### Making requests to the reddit api
+The below will get all comments from the pittsburgh reddit between October 27th 2018 and November 27th 2018 (EST):
+```console
+foo@bar:~$ python3 request.py pittsburgh 2018-10-27-00:00:00 2018-11-27-00:00:00
+foo
+```
 
-Tasks:
+
+Tasks 11-17:
 
 1. Pick cities
 2. Rule based Classifier
