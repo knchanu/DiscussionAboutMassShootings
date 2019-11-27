@@ -6,6 +6,12 @@ The below will get all comments from the pittsburgh reddit between October 27th 
 ```console
 foo@bar:~$ python3 request.py pittsburgh 2018-10-27-00:00:00 2018-11-27-00:00:00
 ```
+### Classifying comments
+Running the script classifer.py writes out the file about_shooting.txt which lists all of the reddit posts about the shooting. This is based on whether the post or any comment within the post contains the word with the stem "shoot" or "shooter".
+E.g. this would include "shooting", "shootings", "shooters", etc. Note that a post contains multiple comments.
+
+### Making word-vectors
+Running the script comment2vector.py makes vectors for all comments in within the posts in about_shooting.txt. The vectors are written to vecs.txt with indexing by the sentence_index.txt provided.
 
 ## Task Recap
 Tasks 11-17:
