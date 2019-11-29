@@ -8,7 +8,7 @@ import json
 import os
 import re
 
-with open(f'microtime/pvals.txt', 'w') as f:
+with open(f'microtime/pval.txt', 'w') as f:
     f.write('chi2test p-values\n')
 
 paths = [
@@ -29,13 +29,13 @@ def time_class(time, ref):
     time = datetime.fromtimestamp(time)
     ref = datetime(*ref)
     if (time - ref).days < 1:
-        return 0
+        return '1 day'
     elif (time - ref).days < 7:
-        return 1
+        return '1 week'
     elif (time - ref).days < 14:
-        return 2
+        return '2 weeks'
     else:
-        return 3
+        return '1 month'
 
 for comment_path, ref in zip(paths, refs):
 
@@ -63,22 +63,17 @@ for comment_path, ref in zip(paths, refs):
     clusters['time'] = clusters['reddit_id'].apply(lambda id_: 
         time[id_] if id_ in time else None)
     clusters = clusters[~clusters['time'].isnull()]
-    clusters['time'] = clusters['time'].astype(int)
-    clusters['count'] = 1
-    df = clusters.groupby(['time', 'cluster']).count().reset_index()
-    n = len(set(clusters['cluster']))
-    m = len(set(clusters['time']))
-    table = np.zeros((m, n))
-    for i,c in enumerate(df['count']):
-        table[i // n, i % n] = c
-    chi2, p, dof, expected = chi2_contingency(table)
-    for i in range(table.shape[0]):
-        table[i] = table[i] / table[i].sum()
+    clusters['count'] = 1.0
+    df = clusters.pivot_table(
+        index='time', columns='cluster', 
+        values='count', aggfunc=sum)
+    chi2, p, dof, expected = chi2_contingency(df.values)
     fig, ax = plt.subplots(figsize=(20, 10))
-    sns.heatmap(table, yticklabels=['1 day', '1 week', '2 weeks', '1 month'], ax=ax,
-        cmap='Blues')
-    plt.title(f'{save_path}')
+    for i in range(df.values.shape[0]):
+        df.values[i] = df.values[i] / df.values[i].sum()
+    sns.heatmap(df, ax=ax, cmap='Blues')
+    plt.title(f'microtime (across cities)')
     plt.savefig(f'microtime/{save_path}')
-    with open(f'microtime/pvals.txt', 'a') as f:
+    with open(f'microtime/pval.txt', 'a') as f:
         f.write(f'{save_path} p-value: {p}\n')
 

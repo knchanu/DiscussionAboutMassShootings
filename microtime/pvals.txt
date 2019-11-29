@@ -1,5 +1,0 @@
-chi2test p-values
-pittsburgh p-value: 4.204691809316447e-105
-lasvegas p-value: 2.106010069285103e-10
-orlando p-value: 8.686949657662132e-44
-elpaso p-value: 1.800065118875468e-08
