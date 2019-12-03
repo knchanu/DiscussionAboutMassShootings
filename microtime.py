@@ -29,13 +29,13 @@ def time_class(time, ref):
     time = datetime.fromtimestamp(time)
     ref = datetime(*ref)
     if (time - ref).days < 1:
-        return '1 day'
+        return 'a) 1 day'
     elif (time - ref).days < 7:
-        return '1 week'
+        return 'b) 1 week'
     elif (time - ref).days < 14:
-        return '2 weeks'
+        return 'c) 2 weeks'
     else:
-        return '1 month'
+        return 'd) 1 month'
 
 for comment_path, ref in zip(paths, refs):
 
