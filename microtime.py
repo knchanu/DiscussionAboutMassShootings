@@ -68,11 +68,15 @@ for comment_path, ref in zip(paths, refs):
         index='time', columns='cluster', 
         values='count', aggfunc=sum)
     chi2, p, dof, expected = chi2_contingency(df.values)
-    fig, ax = plt.subplots(figsize=(20, 10))
+    fig, ax = plt.subplots(figsize=(20, 12))
     for i in range(df.values.shape[0]):
         df.values[i] = df.values[i] / df.values[i].sum()
-    sns.heatmap(df, ax=ax, cmap='Blues')
-    plt.title(f'microtime (across cities)')
+    xticks = ['polarized', 'neutral', 'non-polarizing opinion', 
+        'locations/facts', 'updates', 'law/politics', 'hostile', 'positive']
+    sns.heatmap(df, ax=ax, cmap='Blues', xticklabels=xticks)
+    plt.xticks(rotation='vertical')
+    plt.title(f'microtime (over time within city)')
+    plt.tight_layout()
     plt.savefig(f'microtime/{save_path}')
     with open(f'microtime/pval.txt', 'a') as f:
         f.write(f'{save_path} p-value: {p}\n')
