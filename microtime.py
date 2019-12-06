@@ -37,6 +37,12 @@ def time_class(time, ref):
     else:
         return 'd) 1 month'
 
+
+aclusters = pd.DataFrame()
+xticks = ['polarized', 'neutral', 'opinion', 
+    'locations/facts', 'updates', 'law/politics', 'hostile', 'positive']
+sns.set(context='poster', style='white')
+
 for comment_path, ref in zip(paths, refs):
 
     time = dict()
@@ -62,8 +68,10 @@ for comment_path, ref in zip(paths, refs):
     clusters = pd.read_csv('labels/clusters.txt')
     clusters['time'] = clusters['reddit_id'].apply(lambda id_: 
         time[id_] if id_ in time else None)
+    clusters['city'] = save_path
     clusters = clusters[~clusters['time'].isnull()]
     clusters['count'] = 1.0
+    aclusters = pd.concat([aclusters, clusters])
     df = clusters.pivot_table(
         index='time', columns='cluster', 
         values='count', aggfunc=sum)
@@ -71,13 +79,46 @@ for comment_path, ref in zip(paths, refs):
     fig, ax = plt.subplots(figsize=(20, 12))
     for i in range(df.values.shape[0]):
         df.values[i] = df.values[i] / df.values[i].sum()
-    xticks = ['polarized', 'neutral', 'non-polarizing opinion', 
-        'locations/facts', 'updates', 'law/politics', 'hostile', 'positive']
     sns.heatmap(df, ax=ax, cmap='Blues', xticklabels=xticks)
-    plt.xticks(rotation='vertical')
-    plt.title(f'microtime (over time within city)')
+    plt.xticks(rotation='horizontal')
+    plt.title(f'Percent of comments in each cluster (city = {save_path})')
     plt.tight_layout()
     plt.savefig(f'microtime/{save_path}')
     with open(f'microtime/pval.txt', 'a') as f:
         f.write(f'{save_path} p-value: {p}\n')
+
+for c in set(aclusters['city']):
+    cidx = aclusters['city'] == c
+    aclusters.loc[cidx,'count'] = aclusters[cidx]['count'].astype(float) / aclusters[cidx]['count'].sum()
+
+for l in set(aclusters['cluster']):
+    df = aclusters[aclusters['cluster'] == l]
+    df = df.groupby(['time', 'city']).sum().reset_index()
+    for c in set(df['city']):
+        cidx = df['city'] == c
+        df.loc[cidx,'count'] = df[cidx]['count'].astype(float) / df[cidx]['count'].sum()
+    plt.clf()
+    count = 'Percent of Comments'
+    df[count] = df['count']
+    sns.pointplot(x="time", y=count, hue="city",
+        data=df, dodge=True)
+    plt.title(f'Percent of comments in each time-window (cluster = {xticks[int(l)]})')
+    plt.tight_layout()
+    plt.savefig(f'all-cities/cluster={l}')
+
+for t in set(aclusters['time']):
+    df = aclusters[aclusters['time'] == t]
+    df = df.groupby(['cluster', 'city']).sum().reset_index()
+    for c in set(df['city']):
+        cidx = df['city'] == c
+        df.loc[cidx,'count'] = df[cidx]['count'].astype(float) / df[cidx]['count'].sum()
+    plt.clf()
+    count = 'Percent of Comments'
+    df[count] = df['count']
+    df['cluster'] = df['cluster'].apply(lambda l: xticks[l])
+    sns.barplot(x="cluster", y=count, hue="city",
+        data=df, dodge=True)
+    plt.title(f'Percent of comments in each cluster (time = {t})')
+    plt.tight_layout()
+    plt.savefig(f'all-cities/time={t}')
 
