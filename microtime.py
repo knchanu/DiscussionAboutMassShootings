@@ -77,11 +77,11 @@ for comment_path, ref in zip(paths, refs):
         values='count', aggfunc=sum)
     chi2, p, dof, expected = chi2_contingency(df.values)
     fig, ax = plt.subplots(figsize=(20, 12))
-    for i in range(df.values.shape[0]):
-        df.values[i] = df.values[i] / df.values[i].sum()
+    # for i in range(df.values.shape[0]):
+    #     df.values[i] = df.values[i] / df.values[i].sum()
     sns.heatmap(df, ax=ax, cmap='Blues', xticklabels=xticks)
     plt.xticks(rotation='horizontal')
-    plt.title(f'Percent of comments in each cluster (city = {save_path})')
+    plt.title(f'Number of comments (city = {save_path})')
     plt.tight_layout()
     plt.savefig(f'microtime/{save_path}')
     with open(f'microtime/pval.txt', 'a') as f:
